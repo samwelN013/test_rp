@@ -15,12 +15,14 @@ this_folder = cwd.parent
 data_folder = this_folder.parent / '_data'
 
 # Input Data
-DATA_FILE = data_folder / 'SOLUSDT-1m-2026-06-02.csv'
+# DATA_FILE = data_folder / 'SOLUSDT-1m-2026-06-02.csv'
+DATA_FILE = data_folder / 'WLDUSDT-1m-2024-12.csv'
 
 # Output Files
 JOURNAL_FILE = this_folder.parent/'_output' / 'ma_trade_journal.csv'
 STATS_FILE = this_folder.parent/'_output' / 'ma_stats.json'
 EQUITY_CHART = this_folder.parent/'_output' / 'equity_curve.png'
+SYMBOL = "WLDUSDT"
 
 # Strategy & Account Parameters
 STARTING_CAPITAL = 100000.0
@@ -176,7 +178,7 @@ def main():
                 # Log Trade
                 trade_journal.append({
                     "Trade number": trade_number,
-                    "Symbol": "SOLUSDT",
+                    "Symbol": SYMBOL,
                     "Side": current_side,
                     "Entry Time": entry_time.strftime('%Y-%m-%d %H:%M:%S'),
                     "Entry Price": entry_price,
