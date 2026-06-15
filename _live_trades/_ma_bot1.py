@@ -256,7 +256,7 @@ if __name__ == "__main__":
 
     CHOSEN_SYMBOL = watchlist[6]              # TAOUSDT
     CHOSEN_QUANTITY = watch_qty[CHOSEN_SYMBOL] # 5
-    CHOSEN_TIMEFRAME = "1"                    # Timeframe can easily be shifted ("1", "5", "15", "60")
+    CHOSEN_TIMEFRAME = "10"                    # Timeframe can easily be shifted ("1", "5", "15", "60")
 
     # Instantiate the class object with parameters
     bot = BybitTradingBot(
