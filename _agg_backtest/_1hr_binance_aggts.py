@@ -24,15 +24,27 @@ data = fetch_latest_aggtrades(SYMBOL, LIMIT)
 
 df = pd.DataFrame(data)
 
+# TO RENAMES COLUMNS OF THE DATAFRAME -----------------------------------------------------
+df = df.rename(columns={'a': 'agg_trade_id',
+                        'p': 'price',
+                        'q': 'quantity',
+                        'f': 'first_trade_id',
+                        'l': 'last_trade_id',
+                        'T': 'transact_time',
+                        'm': 'is_buyer_maker',
+                        'M': 'ignore'})
+
+
 print("\Raw Binance aggTrades columns:")
 # print(df.columns.tolist())
 
 
-print(df.head())
+# print(df.tail())
+print(df[0:100].to_string())
 
-#  -- CSV DIRECTORY
+# # -- CSV DIRECTORY
 # cwd =Path(__file__).resolve().parent
-# filename = cwd/f"{SYMBOL}_aggtrades_raw.csv"
+# filename = cwd.parent/'_output'/f"{SYMBOL}_aggtrades_raw.csv"
 # df.to_csv(filename, index=False)
 
 print()
