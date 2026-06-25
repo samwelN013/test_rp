@@ -34,17 +34,31 @@ df = df.rename(columns={'a': 'agg_trade_id',
                         'm': 'is_buyer_maker',
                         'M': 'ignore'})
 
+# # ------- RE-ORDERING COLUMNS -----------------------------------------------------------
+custom_order = ['transact_time', 'price', 'quantity', 'is_buyer_maker',
+                'agg_trade_id', 'first_trade_id', 'last_trade_id', 'ignore']
 
-print("\Raw Binance aggTrades columns:")
-# print(df.columns.tolist())
+# df = df[custom_order]
+# -------------------------------------------------------- OR
+# df = df.reindex(sorted(df.columns), axis=1)
+# -------------------------------------------------------- OR
+# df = df.reindex(columns=['transact_time', 'price', 'quantity', 'is_buyer_maker',
+#                          'agg_trade_id', 'first_trade_id', 'last_trade_id', 'ignore'])
+# -------------------------------------------------------- OR
+df = df.reindex(columns=custom_order)
 
+# ------ CALLING THE DATAFRAME -------------------------
 
+# print(df.columns.tolist())  # prints column headings
+print(df.head())
 # print(df.tail())
-print(df[0:100].to_string())
+# print(df[0:100].to_string())
+# print(df[-20:])
+
+# ------------- NEW DF --------------
+
 
 # # -- CSV DIRECTORY
 # cwd =Path(__file__).resolve().parent
 # filename = cwd.parent/'_output'/f"{SYMBOL}_aggtrades_raw.csv"
 # df.to_csv(filename, index=False)
-
-print()
