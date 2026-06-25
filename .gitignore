@@ -1,0 +1,11 @@
+# folders to ignore
+.venv_prj1/
+.env
+_data/
+_output/
+backtest_results/
+*ipynb
+_agg_backtest/__input_ag/
+_agg_backtest/__output_ag/
+__charts/
+

@@ -3,7 +3,7 @@ import numpy as np
 from pathlib import Path
 from binance.client import Client
 from matplotlib import pyplot as plt
-import csv
+from datetime import datetime
 
 # import aggtrades
 cwd = Path(__file__).resolve()
@@ -12,6 +12,10 @@ file_path = cwd.parent/'__input_ag'/'SOLUSDT-aggTrades-2026-06-20.csv'
 SYMBOL = file_path.name.split("-")[0]
 file_output_path = cwd.parent/'__output_ag'/f"{SYMBOL}_ouput_sample.csv"
 # file_output_path = cwd.parent/'__output_ag'/f"{SYMBOL}_ouput_sample.parquet"
+
+# chart naming
+fname = datetime.now().strftime("%Y%m%d_%H%M%S")
+chart1_path = cwd.parent.parent/'__charts'/f'regime_{fname}.png'
 
 # coin stats like average volume from BINANCE
 
@@ -39,6 +43,7 @@ def get_binance_coin_stats(SYMBOL):
 def aggregated_data():
     v_ma, p_ma, notional_ma = get_binance_coin_stats(SYMBOL)
     # to stop the program incase notional_ma is not available or 0
+    print(f"\n volume ma for {SYMBOL} : $ {notional_ma:,.2f} \n")
     if not notional_ma:
         return
 
@@ -83,6 +88,12 @@ def aggregated_data():
     bdf['dayOpen_prc%change'] = (
         bdf['last_price'] - day_open_price)/day_open_price
 
+    # core derived columns
+    bdf['s_delta'] = (bdf['delta']/notional_ma)
+    bdf['cumulative_sd'] = bdf['s_delta'].cumsum()
+    bdf['mkt_eff'] = (bdf['prc_%change_window']/bdf['s_delta']).abs()
+    bdf['mkt_regime'] = (bdf['dayOpen_prc%change']/bdf['cumulative_sd']).abs()
+
     # column naming convention
     # 1 time = the time duration of the stamp
     # 2 tde1_price = the first trade price in the time window
@@ -92,6 +103,8 @@ def aggregated_data():
     # 6 sellVol_usdt = aggressive sell volume in usdt
     # 7 prc_%change_window = the price percetange change in time window
     # 8 dayOpen_prc%change = is the overall price percentage change from day open
+    # -------------------------------------------
+    # 9 sd_delta = (standardized delta ) : is the delta/volume 20 day moving average in usdt(quote value)
 
     # ----------COLUMN FORMATING ------------------------
     bdf['delta'] = bdf['delta'].round(2)
@@ -114,15 +127,29 @@ def main():
     print(bdf.tail())
 
     # ------------ GRAPHS ANALYSIS  -------------------------------
-    plt.plot(bdf['time'], bdf['buyVol_usdt'],
-             color='green', label="aggressive buy volume")
-    plt.plot(bdf['time'], bdf['sellVol_usdt'],
-             color='red', label="aggressive sell volume")
-    plt.title("volumes against time")
+
+    # plt.plot(bdf['time'], bdf['buyVol_usdt'],
+    #          color='green', label="aggressive buy volume")
+    # plt.plot(bdf['time'], bdf['sellVol_usdt'],
+    #          color='red', label="aggressive sell volume")
+    # plt.title("volumes against time")
+    # plt.xlabel("time to the day")
+    # plt.ylabel('volumes')
+    # plt.grid()
+    # plt.legend()
+    # plt.show()
+
+    plt.plot(bdf['time'], bdf['s_delta'],
+             color='green', label="standardized delta")
+    plt.plot(bdf['time'], bdf['mkt_regime'],
+             color='red', label="market structure")
+    plt.title("mkt derivative analytics")
     plt.xlabel("time to the day")
-    plt.ylabel('volumes')
+    plt.ylabel('derivative columes')
+    plt.tight_layout()
     plt.grid()
     plt.legend()
+    # plt.savefig(chart1_path, dpi=300, bbox_inches="tight")
     plt.show()
 
 
