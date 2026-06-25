@@ -8,4 +8,5 @@ backtest_results/
 _agg_backtest/__input_ag/
 _agg_backtest/__output_ag/
 __charts/
+.idea/
 

@@ -124,20 +124,22 @@ def main():
 
     bdf = aggregated_data()
 
-    print(bdf.tail())
+    print(" all is well ")
+    # print(bdf.tail())
 
     # ------------ GRAPHS ANALYSIS  -------------------------------
 
-    # plt.plot(bdf['time'], bdf['buyVol_usdt'],
-    #          color='green', label="aggressive buy volume")
-    # plt.plot(bdf['time'], bdf['sellVol_usdt'],
-    #          color='red', label="aggressive sell volume")
-    # plt.title("volumes against time")
-    # plt.xlabel("time to the day")
-    # plt.ylabel('volumes')
-    # plt.grid()
-    # plt.legend()
-    # plt.show()
+    plt.plot(bdf['time'], bdf['buyVol_usdt'],
+             color='green', label="aggressive buy volume")
+    plt.plot(bdf['time'], bdf['sellVol_usdt'],
+             color='red', label="aggressive sell volume")
+    plt.title("volumes against time")
+    plt.xlabel("time to the day")
+    plt.ylabel('volumes')
+    plt.grid()
+    plt.legend()
+    plt.show()
+    plt.close()
 
     plt.plot(bdf['time'], bdf['s_delta'],
              color='green', label="standardized delta")
@@ -151,6 +153,7 @@ def main():
     plt.legend()
     # plt.savefig(chart1_path, dpi=300, bbox_inches="tight")
     plt.show()
+    plt.close()
 
 
 if __name__ == "__main__":
