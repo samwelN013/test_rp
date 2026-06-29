@@ -63,6 +63,7 @@ matplotlib==3.11.0
 matplotlib-inline==0.2.2
 mistune==3.3.1
 multidict==6.7.1
+narwhals==2.22.1
 nbclient==0.11.0
 nbconvert==7.17.1
 nbformat==5.10.4
@@ -72,10 +73,12 @@ notebook_shim==0.2.4
 numpy==2.4.4
 packaging==26.2
 pandas==3.0.3
+pandas-stubs==3.0.3.260530
 pandocfilters==1.5.1
 parso==0.8.7
 pillow==12.2.0
 platformdirs==4.10.0
+plotly==6.8.0
 prometheus_client==0.25.0
 prompt_toolkit==3.0.52
 propcache==0.5.2

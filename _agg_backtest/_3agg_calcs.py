@@ -4,6 +4,9 @@ from pathlib import Path
 from binance.client import Client
 from matplotlib import pyplot as plt
 from datetime import datetime
+# --------------------------------
+import plotly.graph_objects as go
+import plotly.express as px
 
 # import aggtrades
 cwd = Path(__file__).resolve()
@@ -70,14 +73,9 @@ def aggregated_data():
         df['is_buyer_maker'] == True, df['quote_qty_usdt'], 0.0)
 
     # BUCKETING TIME WINDOWS --- groupby --- aggregating
-    bdf = df.groupby(pd.Grouper(key='transact_time', freq='5Min')).agg(tde1_price=('price', 'first'),
-                                                                       last_price=(
-        'price', 'last'),
-        buyVol_usdt=(
-        'buy_vol_usdt', 'sum'),
-        sellVol_usdt=(
-        'sell_vol_usdt', 'sum')
-    ).reset_index()
+    
+    bdf = df.groupby(pd.Grouper(key='transact_time', freq='5Min')).agg(tde1_price=('price', 'first'), last_price=(
+        'price', 'last'), buyVol_usdt=('buy_vol_usdt', 'sum'), sellVol_usdt=('sell_vol_usdt', 'sum')).reset_index()
     # rename columns
     bdf = bdf.rename(columns={'transact_time': 'time'})
     # derived columns
@@ -91,8 +89,14 @@ def aggregated_data():
     # core derived columns
     bdf['s_delta'] = (bdf['delta']/notional_ma)
     bdf['cumulative_sd'] = bdf['s_delta'].cumsum()
-    bdf['mkt_eff'] = (bdf['prc_%change_window']/bdf['s_delta']).abs()
-    bdf['mkt_regime'] = (bdf['dayOpen_prc%change']/bdf['cumulative_sd']).abs()
+
+    bdf['mkt_eff'] = (np.where(bdf['s_delta'] != 0,
+                      (bdf['dayOpen_prc%change']/bdf['s_delta']), 0.00))
+    bdf['mkt_eff'] = bdf['mkt_eff'].abs()
+
+    bdf['mkt_regime'] = (np.where(bdf['cumulative_sd'] != 0,
+                         (bdf['dayOpen_prc%change']/bdf['cumulative_sd']), 0.00))
+    bdf['mkt_regime'] = bdf['mkt_regime'].abs()
 
     # column naming convention
     # 1 time = the time duration of the stamp
@@ -113,6 +117,7 @@ def aggregated_data():
 
     # ------------- EXPORTING dataframe to CSV FILE using pandas ---------------
     # bdf.to_csv(file_output_path, index=False)
+    # print('file saved to CSV')
 
     # ------------- EXPORTING the dataframe to parquet using pandas ---------------
     # bdf.to_parquet(file_output_path)
@@ -124,36 +129,19 @@ def main():
 
     bdf = aggregated_data()
 
-    print(" all is well ")
+    # print(" all is well ")
     # print(bdf.tail())
 
     # ------------ GRAPHS ANALYSIS  -------------------------------
 
-    plt.plot(bdf['time'], bdf['buyVol_usdt'],
-             color='green', label="aggressive buy volume")
-    plt.plot(bdf['time'], bdf['sellVol_usdt'],
-             color='red', label="aggressive sell volume")
-    plt.title("volumes against time")
-    plt.xlabel("time to the day")
-    plt.ylabel('volumes')
-    plt.grid()
-    plt.legend()
-    plt.show()
-    plt.close()
+    # fig1 = px.line(bdf, x='time', y='buyVol_usdt')
+    # fig1.show()
 
-    plt.plot(bdf['time'], bdf['s_delta'],
-             color='green', label="standardized delta")
-    plt.plot(bdf['time'], bdf['mkt_regime'],
-             color='red', label="market structure")
-    plt.title("mkt derivative analytics")
-    plt.xlabel("time to the day")
-    plt.ylabel('derivative columes')
-    plt.tight_layout()
-    plt.grid()
-    plt.legend()
-    # plt.savefig(chart1_path, dpi=300, bbox_inches="tight")
-    plt.show()
-    plt.close()
+    # fig2 = px.line(bdf, x='time', y='delta')
+    # fig2.show()
+
+    print(bdf.head())
+    # print(bdf.columns.tolist())
 
 
 if __name__ == "__main__":
