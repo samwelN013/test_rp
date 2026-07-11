@@ -1,12 +1,22 @@
-# folders to ignore
+# --- environment related -------
 .venv_prj1/
 .env
-_data/
-_output/
-backtest_results/
-*ipynb
-_agg_backtest/__input_ag/
-_agg_backtest/__output_ag/
-__charts/
+.vscode/
+
 .idea/
 
+# ---------- folders to ignore ----------
+__DUCKdb/_inputs/
+__DUCKdb/_outputs/
+#------------
+_1inputs/
+#--------------
+_3agg_backtest/__input_ag/
+_3agg_backtest/__output_ag/
+#----------
+_4charts/
+_5outputs/
+_5backtest_results/
+
+# ------- files to ignore -----------
+*.ipynb

@@ -78,25 +78,28 @@ def aggregated_data():
         'price', 'last'), buyVol_usdt=('buy_vol_usdt', 'sum'), sellVol_usdt=('sell_vol_usdt', 'sum')).reset_index()
     # rename columns
     bdf = bdf.rename(columns={'transact_time': 'time'})
-    # derived columns
+    # derived columns  ------------------------------------- PERCENTAGES
     bdf['delta'] = bdf['buyVol_usdt'] - bdf['sellVol_usdt']
-    bdf['prc_%change_window'] = (
-        bdf['last_price']-bdf['tde1_price'])/bdf['tde1_price']
+    bdf['prc_change_window'] = ((
+        bdf['last_price']-bdf['tde1_price'])/bdf['tde1_price'])*100
     day_open_price = bdf['tde1_price'].iloc[0]
-    bdf['dayOpen_prc%change'] = (
-        bdf['last_price'] - day_open_price)/day_open_price
+    bdf['dayOpen_prcchange'] = ((
+        bdf['last_price'] - day_open_price)/day_open_price)*100
 
     # core derived columns
-    bdf['s_delta'] = (bdf['delta']/notional_ma)
+    bdf['s_delta'] = (bdf['delta']/notional_ma)*100
     bdf['cumulative_sd'] = bdf['s_delta'].cumsum()
 
     bdf['mkt_eff'] = (np.where(bdf['s_delta'] != 0,
-                      (bdf['dayOpen_prc%change']/bdf['s_delta']), 0.00))
-    bdf['mkt_eff'] = bdf['mkt_eff'].abs()
+                      (bdf['dayOpen_prcchange']/bdf['s_delta']), 0.00))
+    bdf['mkt_eff'] = (bdf['mkt_eff']*100).abs()
 
     bdf['mkt_regime'] = (np.where(bdf['cumulative_sd'] != 0,
-                         (bdf['dayOpen_prc%change']/bdf['cumulative_sd']), 0.00))
-    bdf['mkt_regime'] = bdf['mkt_regime'].abs()
+                         (bdf['dayOpen_prcchange']/bdf['cumulative_sd']), 0.00))
+    bdf['mkt_regime'] = (bdf['mkt_regime']*100).abs()
+
+    # -------------  OTHER COLUMNS ------------------
+
 
     # column naming convention
     # 1 time = the time duration of the stamp
@@ -140,8 +143,9 @@ def main():
     # fig2 = px.line(bdf, x='time', y='delta')
     # fig2.show()
 
-    print(bdf.head())
+    # print(bdf.head())
     # print(bdf.columns.tolist())
+    print(bdf[0:30].to_string())
 
 
 if __name__ == "__main__":
