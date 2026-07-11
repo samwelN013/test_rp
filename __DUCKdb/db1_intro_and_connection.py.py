@@ -4,6 +4,7 @@ from pathlib import Path
 import duckdb
 import glob
 import time
+import polars
 
 # FILE PATH
 # cwd = Path.cwd()

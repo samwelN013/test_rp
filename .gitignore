@@ -20,3 +20,8 @@ _5backtest_results/
 
 # ------- files to ignore -----------
 *.ipynb
+*.csv
+
+# -------- file in folder ----------
+__DUCKdb/*.csv
+
