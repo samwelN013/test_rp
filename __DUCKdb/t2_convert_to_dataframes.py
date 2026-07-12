@@ -25,4 +25,15 @@ p_df = mkt_data.pl()
 
 # CONVERTING TO ARRROWS : data.arrow() ====================
 d_arrow = mkt_data.arrow()
-print(d_arrow)
+# print(d_arrow)
+
+# CONVERT DATA TO NUMPY ARRAY  : data.fetchnumpy() ==================
+d_nmp =mkt_data.fetchnumpy() 
+# print(d_nmp)
+
+# CONVERT TO PYTHON OBJECTS : data.fetchall()
+# --- and each object in the dataframe is a TUPLE
+
+p_objt= mkt_data.fetchone() # to return a single object out of the entire object; a single tuple
+p_objt = mkt_data.fetchall() # returns all the tuples
+print(p_objt)

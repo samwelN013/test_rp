@@ -23,7 +23,7 @@ data1 = duckdb.sql("select  * from 'postcsv.csv' ")
 _csv = duckdb.read_csv(csvfile)
 # print(_csv)
 
-#---MTD 3: uses the select functions with the relative file path
+# ---MTD 3: uses the select functions with the relative file path
 # mtd 3_a)
 data2 = duckdb.sql("select * from 'postcsv.csv' ")
 # print(data2)
@@ -33,23 +33,23 @@ data3 = duckdb.sql("select * from _csv ")
 # print(data3)
 
 # --------------------------------------------------------------------------------
-#   modifications on reading CSV reading 
+#   modifications on reading CSV reading
 
-mktdata = duckdb.read_csv(csvfile, header= False, skiprows=1)
+mktdata = duckdb.read_csv(csvfile, header=False, skiprows=1)
 # print(mktdata)
-data4 =duckdb.sql("select * from mktdata")
+data4 = duckdb.sql("select * from mktdata")
 # print(data)
 
 # -------------------------------------------------------------------------------
 # returning the type of the database
 my_type = type(data3)
-print(my_type) # returns  <class '_duckdb.DuckDBPyRelation'>
+print(my_type)  # returns  <class '_duckdb.DuckDBPyRelation'>
 
 # ----------------------------------------------------------------------------
 # CONVERT THE DUCKDB DATA FILE TO PANDAS df : use the data.df() function
 df = data3.df()
 # print(df.head())
 
+# ------------- ---------
 
-
-
+# MOVE THE NEXT py file 't2'.
