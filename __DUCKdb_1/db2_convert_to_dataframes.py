@@ -36,4 +36,4 @@ d_nmp =mkt_data.fetchnumpy()
 
 p_objt= mkt_data.fetchone() # to return a single object out of the entire object; a single tuple
 p_objt = mkt_data.fetchall() # returns all the tuples
-print(p_objt)
+# print(p_objt)

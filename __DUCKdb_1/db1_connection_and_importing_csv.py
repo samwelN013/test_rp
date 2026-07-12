@@ -9,8 +9,9 @@ cwd = Path(__file__).resolve()
 csvfile = cwd.parent/'_inputs'/'postcsv.csv'
 
 # ---- CONNECTION TO DUCKDB --------------------------------------------------------
-conn = duckdb.connect()  # in memory mode - discard when we exit the python file
-conn.execute('select 42').fetchone()
+conn = duckdb.connect()  # in memory mode - discards when the python file is exited
+
+cursor = conn.execute('select 42').fetchone()
 # print(num)
 
 
