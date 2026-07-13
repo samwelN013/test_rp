@@ -6,8 +6,11 @@
 .idea/
 
 # ---------- folders to ignore ----------
-__DUCKdb/_inputs/
-__DUCKdb/_outputs/
+__DUCKdb_1/_inputs/
+__DUCKdb_1/_outputs/
+
+__DUCKdb_2/_inputs/
+__DUCKdb_2/_outputs/
 #------------
 _1inputs/
 #--------------
@@ -21,6 +24,7 @@ _5backtest_results/
 # ------- files to ignore -----------
 *.ipynb
 *.csv
+# *.db
 
 # -------- file in folder ----------
 __DUCKdb/*.csv

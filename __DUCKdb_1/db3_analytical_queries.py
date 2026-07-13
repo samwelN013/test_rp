@@ -33,9 +33,11 @@ trades = conn.execute("select * from aggtrades1 ").df()
 
 # print(trades.head())
 
-# # to return info about my schema or database, ie the list of tables i have created : ALMOST DONE
-# # infor about a specific table : DONE
+
+
 # global parqueting/ csv_ing  
 # Easily converting files from csv to parquet.
+# functions i will need
+# group by and aggregation
 
 
