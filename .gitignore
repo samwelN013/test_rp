@@ -25,6 +25,7 @@ _5backtest_results/
 *.ipynb
 *.csv
 # *.db
+*.parquet
 
 # -------- file in folder ----------
 __DUCKdb/*.csv
