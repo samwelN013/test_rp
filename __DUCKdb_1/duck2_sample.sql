@@ -1,16 +1,4 @@
-import pandas as pd
-import duckdb
-from pathlib import Path
 
-# file source/path
-pqt_file_path = Path(__file__).resolve().parent.parent/'__DUCKdb_1' / \
-    '_inputs'/'pqt_folder'/'SOLUSDT-aggTrades-2026-07-08.parquet'
-
-# duckdb connection
-conn = duckdb.connect(database=":memory:")
-
-# the sql query
-qry = f"""--sql
 with rawdata as (
     select
         epoch_ms(cast(transact_time as bigint)) as ts,
@@ -18,7 +6,7 @@ with rawdata as (
         quantity,
         (price * quantity ) quote_qty_usdt,
         is_buyer_maker
-    from read_parquet('{pqt_file_path}')
+    from read_parquet("C:\Users\user\Desktop\test_repo\__DUCKdb_1\_inputs\pqt_folder\SOLUSDT-aggTrades-2026-07-08.parquet")
 ),
 processed_data as(
     select
@@ -37,6 +25,3 @@ select
 from processed_data
 group by 1
 order by transact_time asc;
-"""
-df = conn.execute(qry).df()
-print(df.head())

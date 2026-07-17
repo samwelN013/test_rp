@@ -41,7 +41,8 @@ conn = duckdb.connect()
 
 sorted_files = sorted([f.as_posix() for f in pqt_file.glob('*.parquet')])
 
-df = conn.sql(f"select * from read_parquet({sorted_files})").df()
+df = conn.sql(f"""--sql  
+              select * from read_parquet({sorted_files}) """).df()
 
 
 # -----------------------------------------------------------

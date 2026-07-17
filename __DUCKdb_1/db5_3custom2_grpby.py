@@ -35,7 +35,7 @@ select
     sum(buy_vol_usdt) as buyVol_usdt,
     sum(sell_vol_usdt) as sellVol_usdt
 from processed_data
-group by 1
+GROUP BY time_bucket(INTERVAL '5 Minutes', ts)
 order by transact_time asc;
 """
 df = conn.execute(qry).df()

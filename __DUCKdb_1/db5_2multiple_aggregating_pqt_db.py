@@ -18,7 +18,7 @@ conn = duckdb.connect(database=":memory:")
 
 # 2. Write the SQL query to do the heavy lifting
 # We use time_bucket for fast grouping, and arg_min/arg_max to get open (first) and close (last) prices.
-query = f"""
+query = f"""--sql
 WITH raw_data AS (
     SELECT 
         -- Convert millisecond epoch to timestamp
