@@ -4,25 +4,33 @@ import json
 import csv
 from pathlib import Path
 import matplotlib.pyplot as plt
+from datetime import datetime
 
 # ==============================================================================
 # 1. CONFIGURATION & FILE PATHS
 # ==============================================================================
+stt = datetime.now() # start time
 
 # Setup paths based on the current file's location
 cwd = Path(__file__).resolve()
-this_folder = cwd.parent
-data_folder = this_folder.parent / '_data'
+this_folder = cwd.parent.parent
 
 # Input Data
 # DATA_FILE = data_folder / 'SOLUSDT-1m-2026-06-02.csv'
-DATA_FILE = data_folder / 'WLDUSDT-1m-2024-12.csv'
+DATA_FILE = this_folder / '_1inputs' / 'WLDUSDT-1m-2024-12.csv'
 
 # Output Files
-JOURNAL_FILE = this_folder.parent/'_output' / 'ma_trade_journal.csv'
-STATS_FILE = this_folder.parent/'_output' / 'ma_stats.json'
-EQUITY_CHART = this_folder.parent/'_output' / 'equity_curve.png'
-SYMBOL = "WLDUSDT"
+#---------------ensure out put folder exists
+out_folder = this_folder/'_5outputs'
+out_folder.mkdir(parents=True, exist_ok=True)
+
+# symbol name
+SYMBOL = DATA_FILE.name.split("-")[0] # ie WLDUSDT
+timenow= datetime.now().strftime("%d_%H%M%S")
+
+JOURNAL_FILE = out_folder/ f"{SYMBOL}_journal-{timenow}.csv"
+STATS_FILE = out_folder/f"{SYMBOL}_stats-{timenow}.json" 
+EQUITY_CHART = out_folder/f"{SYMBOL}_equitycurve-{timenow}.png"
 
 # Strategy & Account Parameters
 STARTING_CAPITAL = 100000.0
@@ -302,7 +310,11 @@ def main():
     print("\n--- Quick Stats Overview ---")
     for key, value in stats.items():
         print(f"{key}: {value}")
+    
+    run_duration = datetime.now() - stt
+    print(f"run time : {run_duration}") 
 
+   
 
 if __name__ == "__main__":
     main()
