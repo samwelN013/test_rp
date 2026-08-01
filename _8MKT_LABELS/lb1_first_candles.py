@@ -40,6 +40,7 @@ df['close_time'] = pd.to_datetime(df['close_time'], unit='ms')
 # Ensure numeric types for Plotly
 cols_to_numeric = ['open', 'high', 'low', 'close']
 df[cols_to_numeric] = df[cols_to_numeric].apply(pd.to_numeric)
+
 # THE CANDLE CHART
 
 fig = go.Figure()
@@ -47,15 +48,24 @@ fig.add_trace(go.Candlestick(x=df['open_time'],
                              open=df['open'],
                              high=df['high'],
                              low=df['low'],
-                             close=['close'],
+                             close=df['close'],
                              name='OHLC',
+                             # bullish candles
                              increasing_line_color='#26a69a',
-                             decreasing_line_color='#ef5350'))
+                             increasing_fillcolor='rgba(0, 0, 0, 0)',
+                             increasing_line_width=1,
+                             # bearish candles
+                             decreasing_line_color='#ef5350',
+                             decreasing_fillcolor= 'rgba(0, 0, 0, 0)',
+                             decreasing_line_width=1
+                             ))
 
 fig.update_layout(title='2026 SOL day timeframe chart',
                   template='plotly_dark',
                   xaxis_rangeslider_visible=False,
                   hovermode='x unified',
-                  showlegend=False,)
+                  showlegend=False,
+                  height=600
+                  )
 
 fig.show()
