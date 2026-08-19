@@ -7,13 +7,11 @@ from pathlib import Path
 # ------------------------------------------------------------------
 journal_folder = Path(__file__).resolve().parent/'_output_j'
 journal_folder.mkdir(parents=True, exist_ok=True)
-journal_path = journal_folder/'hyro_crypto_journal.csv'
+journal_path = journal_folder/'TEST2.csv'
 #  API credentials:
-# API_KEY = "KtKADX3GIyPFbRItgj"
-# API_SECRET = "dvX94tGVd7wldCIXdjsPo6XEliNhGXaVluir"
+API_KEY = "KtKADX3GIyPFbRItgj"
+API_SECRET = "dvX94tGVd7wldCIXdjsPo6XEliNhGXaVluir"
 
-API_KEY = "A33ksUVSWx55SmvkfE"
-API_SECRET = "KhGyRe5nj4QqritCVpK2nCoVgI1MwHvYejkA"
 # Set testnet=False, demo = True since am using live account's demo section
 TESTNET = False
 DEMO = True

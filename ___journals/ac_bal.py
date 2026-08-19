@@ -10,9 +10,6 @@ session = HTTP(
     demo=True,
     api_key="KtKADX3GIyPFbRItgj",
     api_secret="dvX94tGVd7wldCIXdjsPo6XEliNhGXaVluir",
-    # api_key = "A33ksUVSWx55SmvkfE",
-    # api_secret= "KhGyRe5nj4QqritCVpK2nCoVgI1MwHvYejkA",
-
 )
 
 
