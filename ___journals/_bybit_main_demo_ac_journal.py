@@ -163,6 +163,10 @@ def fetch_closed_trades(days_back: int = 3) -> list:
         exit_price = float(trade.get("avgExitPrice", 0.0))
         pnl = float(trade.get("closedPnl", 0.0))
 
+        filled_value = (qty * entry_price)
+        percent_pnl = (pnl/filled_value)*100
+        cumm_pnl = (trade_balance-100000)
+
         created_time_ms = int(trade.get("createdTime", 0))
         updated_time_ms = int(trade.get("updatedTime", 0))
 
@@ -190,7 +194,10 @@ def fetch_closed_trades(days_back: int = 3) -> list:
             "fill fee": round(float(trade.get("openFee", 0.0)), 6),
             "exit fee": round(float(trade.get("closeFee", 0.0)), 6),
 
-            "PnL": round(pnl, 4),
+            "Net PnL": round(pnl, 4),
+            "% net pnl": f"{round(percent_pnl, 2)} %",
+            "cumm net pnl": round(cumm_pnl, 2),
+
             "account balance": trade_balance,
             "entry date": entry_date.strftime("%Y-%m-%d %H:%M:%S") if entry_date else "N/A",
             "exit date": exit_date.strftime("%Y-%m-%d %H:%M:%S") if exit_date else "N/A",
