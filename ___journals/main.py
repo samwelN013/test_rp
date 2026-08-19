@@ -7,10 +7,13 @@ from pathlib import Path
 # ------------------------------------------------------------------
 journal_folder = Path(__file__).resolve().parent/'_output_j'
 journal_folder.mkdir(parents=True, exist_ok=True)
-journal_path = journal_folder/'main_crypto_journal.csv'
+journal_path = journal_folder/'hyro_crypto_journal.csv'
 #  API credentials:
-API_KEY = "KtKADX3GIyPFbRItgj"
-API_SECRET = "dvX94tGVd7wldCIXdjsPo6XEliNhGXaVluir"
+# API_KEY = "KtKADX3GIyPFbRItgj"
+# API_SECRET = "dvX94tGVd7wldCIXdjsPo6XEliNhGXaVluir"
+
+API_KEY = "A33ksUVSWx55SmvkfE"
+API_SECRET = "KhGyRe5nj4QqritCVpK2nCoVgI1MwHvYejkA"
 # Set testnet=False, demo = True since am using live account's demo section
 TESTNET = False
 DEMO = True
@@ -22,18 +25,6 @@ session = HTTP(
     api_secret=API_SECRET,
 )
 
-
-# def get_wallet_balance() -> float:
-#     """Fetch current total equity/account balance in USDT."""
-#     try:
-#         response = session.get_wallet_balance(
-#             accountType="UNIFIED", coin="USDT")
-#         result = response.get("result", {}).get("list", [])
-#         if result:
-#             return float(result[0].get("totalEquity", 0.0))
-#     except Exception as e:
-#         print(f"Error fetching account balance: {e}")
-#     return 0.0
 
 def get_wallet_balance() -> float:
     """Fetch total wallet balance converted to nominal USDT units."""
@@ -59,6 +50,7 @@ def get_wallet_balance() -> float:
         print(f"Error fetching account balance: {e}")
     return 0.0
 
+
 def get_entry_order_type_from_executions(symbol: str, start_time_ms: int) -> str:
     """Look up execution history to find exact entry orderType (Market vs Limit)."""
     try:
@@ -79,56 +71,46 @@ def get_entry_order_type_from_executions(symbol: str, start_time_ms: int) -> str
 
 
 def fetch_closed_trades():
-    """Fetch closed USDT Perpetual trade history and format into 17 columns."""
+    """Fetch closed USDT Perpetual trades with simple backward balance tracking."""
     current_balance = get_wallet_balance()
 
-    # Fetch closed PnL records for Linear (USDT/USDC Perpetual) instruments
     response = session.get_closed_pnl(category="linear", limit=50)
     records = response.get("result", {}).get("list", [])
 
+    # Filter strictly for USDT Perpetual pairs
+    usdt_records = [t for t in records if t.get("symbol", "").endswith("USDT")]
+
+    # Sort chronologically (oldest first, newest last)
+    usdt_records.sort(key=lambda t: int(t.get("updatedTime", 0)))
+
+    # Step 1: Walk BACKWARD from current balance using the Net PnL (closedPnl) directly
+    running_balance = current_balance
+    historical_balances = []
+
+    for trade in reversed(usdt_records):
+        pnl = float(trade.get("closedPnl", 0.0))
+        historical_balances.append(round(running_balance, 4))
+        running_balance -= pnl  # Simply subtract the net PnL
+
+    # Reverse back to match chronological order (oldest -> newest)
+    historical_balances.reverse()
+
+    # Step 2: Build simple journal rows
     journal_rows = []
-
-    for index, trade in enumerate(reversed(records), start=1):
+    for index, (trade, trade_balance) in enumerate(zip(usdt_records, historical_balances), start=1):
         symbol = trade.get("symbol", "")
-
-        # Filter strictly for USDT Perpetual pairs (e.g., BTCUSDT)
-        if not symbol.endswith("USDT"):
-            continue
-
-        # Extract PnL & Order Details
-        side = trade.get("side", "")  # Buy/Sell
         qty = float(trade.get("qty", 0.0))
         entry_price = float(trade.get("avgEntryPrice", 0.0))
         exit_price = float(trade.get("avgExitPrice", 0.0))
         pnl = float(trade.get("closedPnl", 0.0))
 
-        filled_value = qty * entry_price
-        created_time_ms = int(trade.get("createdTime", 0))
-
-        # Extract exact fill (open) fee and exit (close) fee directly from Bybit
-        open_fee = float(trade.get("openFee", 0.0))
-        close_fee = float(trade.get("closeFee", 0.0))
-
-        # Fetch exact entry order type using creation timestamp
-        entry_order_type = get_entry_order_type_from_executions(
-            symbol, created_time_ms)
-        # Directly from trade object
-        exit_order_type = trade.get("orderType", "Market")
-
-        # Dates & Time handling (Bybit returns timestamps in milliseconds)
         created_time_ms = int(trade.get("createdTime", 0))
         updated_time_ms = int(trade.get("updatedTime", 0))
 
-        entry_date = (
-            datetime.fromtimestamp(created_time_ms / 1000)
-            if created_time_ms
-            else None
-        )
-        exit_date = (
-            datetime.fromtimestamp(updated_time_ms / 1000)
-            if updated_time_ms
-            else None
-        )
+        entry_date = datetime.fromtimestamp(
+            created_time_ms / 1000) if created_time_ms else None
+        exit_date = datetime.fromtimestamp(
+            updated_time_ms / 1000) if updated_time_ms else None
 
         days_in_trade = (
             round((updated_time_ms - created_time_ms) / (1000 * 60 * 60 * 24), 2)
@@ -136,32 +118,24 @@ def fetch_closed_trades():
             else 0.0
         )
 
-        # Map Side to Long / Short
-        trade_side = "Long" if side.lower() == "buy" else "Short"
-
-        # Construct row matching your 17 exact columns
         row = {
             "trade number": index,
             "symbol": symbol,
-            "side": trade_side,
+            "side": "Long" if trade.get("side", "").lower() == "buy" else "Short",
             "filled qty": qty,
-            "filled value (usdt)": round(filled_value, 4),
-
-            # Actual taker/maker fee
-            "fill fee": round(open_fee, 6),    # Exact entry fee paid
-            "exit fee": round(close_fee, 6),   # Exact exit fee paid
-
+            "filled value (usdt)": round(qty * entry_price, 4),
+            "fill fee": round(float(trade.get("openFee", 0.0)), 6),
+            "exit fee": round(float(trade.get("closeFee", 0.0)), 6),
             "avg fill price": entry_price,
             "exit price": exit_price,
             "PnL": round(pnl, 4),
-            "account balance": current_balance,
+            "account balance": trade_balance,
             "entry date": entry_date.strftime("%Y-%m-%d %H:%M:%S") if entry_date else "N/A",
             "exit date": exit_date.strftime("%Y-%m-%d %H:%M:%S") if exit_date else "N/A",
             "days in a trade": days_in_trade,
-
-            "Entry ordertype": entry_order_type,
-            "Exit ordertype": exit_order_type,
-            # "instrument": "USDT Perpetuals",
+            "order type entry": "Limit" if trade.get("execType") == "Trade" else "Market",
+            "order type exit": trade.get("orderType", "Market"),
+            "instrument": "USDT Perpetuals",
         }
         journal_rows.append(row)
 

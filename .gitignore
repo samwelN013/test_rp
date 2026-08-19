@@ -29,4 +29,9 @@ _5backtest_results/
 
 # -------- file in folder ----------
 __DUCKdb/*.csv
+___journals/*.env
+___journals/_input_j/*.env
+
+
+
 

@@ -60,6 +60,7 @@ def get_wallet_balance() -> float:
     return 0.0
 
 
+
 def get_entry_order_type_from_executions(symbol: str, start_time_ms: int) -> str:
     """Look up execution history to find exact entry orderType (Market vs Limit)."""
     try:
@@ -78,9 +79,96 @@ def get_entry_order_type_from_executions(symbol: str, start_time_ms: int) -> str
         print(f"Execution lookup error: {e}")
     return "Market"
 
+# def fetch_closed_trades():
+#     """Fetch closed USDT Perpetual trade history with reconstructed historical balances."""
+#     latest_balance = get_wallet_balance()
+
+#     response = session.get_closed_pnl(category="linear", limit=50)
+#     records = response.get("result", {}).get("list", [])
+
+#     # Filter strictly for USDT Perpetual pairs
+#     usdt_records = [t for t in records if t.get("symbol", "").endswith("USDT")]
+
+#     # Sort trades chronologically (oldest first, newest last)
+#     usdt_records.sort(key=lambda t: int(t.get("updatedTime", 0)))
+
+#     # Step 1: Calculate net PnL for each trade (pnl minus open & close fees)
+#     trade_data = []
+#     for trade in usdt_records:
+#         pnl = float(trade.get("closedPnl", 0.0))
+#         open_fee = float(trade.get("openFee", 0.0))
+#         close_fee = float(trade.get("closeFee", 0.0))
+#         net_pnl = pnl - open_fee - close_fee
+#         trade_data.append((trade, net_pnl))
+
+#     # Step 2: Work BACKWARD from the newest trade to reconstruct historical balances
+#     # The newest trade ends with `latest_balance`
+#     running_balance = latest_balance
+#     historical_balances = []
+
+#     for _, net_pnl in reversed(trade_data):
+#         historical_balances.append(round(running_balance, 4))
+#         running_balance -= net_pnl  # Subtract net gain/loss to find balance before this trade
+
+#     # Reverse back so historical_balances aligns with chronological order (oldest -> newest)
+#     historical_balances.reverse()
+
+#     # Step 3: Build journal rows
+#     journal_rows = []
+#     for index, ((trade, _), trade_balance) in enumerate(zip(trade_data, historical_balances), start=1):
+#         symbol = trade.get("symbol", "")
+#         side = trade.get("side", "")
+#         qty = float(trade.get("qty", 0.0))
+#         entry_price = float(trade.get("avgEntryPrice", 0.0))
+#         exit_price = float(trade.get("avgExitPrice", 0.0))
+#         pnl = float(trade.get("closedPnl", 0.0))
+#         open_fee = float(trade.get("openFee", 0.0))
+#         close_fee = float(trade.get("closeFee", 0.0))
+
+#         filled_value = qty * entry_price
+#         exit_order_type = trade.get("orderType", "Market")
+#         entry_order_type = "Limit" if trade.get("execType") == "Trade" else "Market"
+
+#         created_time_ms = int(trade.get("createdTime", 0))
+#         updated_time_ms = int(trade.get("updatedTime", 0))
+
+#         entry_date = datetime.fromtimestamp(created_time_ms / 1000) if created_time_ms else None
+#         exit_date = datetime.fromtimestamp(updated_time_ms / 1000) if updated_time_ms else None
+
+#         days_in_trade = (
+#             round((updated_time_ms - created_time_ms) / (1000 * 60 * 60 * 24), 2)
+#             if (created_time_ms and updated_time_ms)
+#             else 0.0
+#         )
+
+#         trade_side = "Long" if side.lower() == "buy" else "Short"
+
+#         row = {
+#             "trade number": index,
+#             "symbol": symbol,
+#             "side": trade_side,
+#             "filled qty": qty,
+#             "filled value (usdt)": round(filled_value, 4),
+#             "fill fee": round(open_fee, 6),
+#             "exit fee": round(close_fee, 6),
+#             "avg fill price": entry_price,
+#             "exit price": exit_price,
+#             "PnL": round(pnl, 4),
+#             "account balance": trade_balance,  # Accurate reconstructed balance at trade exit!
+#             "entry date": entry_date.strftime("%Y-%m-%d %H:%M:%S") if entry_date else "N/A",
+#             "exit date": exit_date.strftime("%Y-%m-%d %H:%M:%S") if exit_date else "N/A",
+#             "days in a trade": days_in_trade,
+#             "order type entry": entry_order_type,
+#             "order type exit": exit_order_type,
+#             "instrument": "USDT Perpetuals",
+#         }
+#         journal_rows.append(row)
+
+#     return journal_rows
+
 def fetch_closed_trades():
-    """Fetch closed USDT Perpetual trade history with reconstructed historical balances."""
-    latest_balance = get_wallet_balance()
+    """Fetch closed USDT Perpetual trades with simple backward balance tracking."""
+    current_balance = get_wallet_balance()
 
     response = session.get_closed_pnl(category="linear", limit=50)
     records = response.get("result", {}).get("list", [])
@@ -88,46 +176,30 @@ def fetch_closed_trades():
     # Filter strictly for USDT Perpetual pairs
     usdt_records = [t for t in records if t.get("symbol", "").endswith("USDT")]
 
-    # Sort trades chronologically (oldest first, newest last)
+    # Sort chronologically (oldest first, newest last)
     usdt_records.sort(key=lambda t: int(t.get("updatedTime", 0)))
 
-    # Step 1: Calculate net PnL for each trade (pnl minus open & close fees)
-    trade_data = []
-    for trade in usdt_records:
-        pnl = float(trade.get("closedPnl", 0.0))
-        open_fee = float(trade.get("openFee", 0.0))
-        close_fee = float(trade.get("closeFee", 0.0))
-        net_pnl = pnl - open_fee - close_fee
-        trade_data.append((trade, net_pnl))
-
-    # Step 2: Work BACKWARD from the newest trade to reconstruct historical balances
-    # The newest trade ends with `latest_balance`
-    running_balance = latest_balance
+    # Step 1: Walk BACKWARD from current balance using the Net PnL (closedPnl) directly
+    running_balance = current_balance
     historical_balances = []
 
-    for _, net_pnl in reversed(trade_data):
+    for trade in reversed(usdt_records):
+        pnl = float(trade.get("closedPnl", 0.0))
         historical_balances.append(round(running_balance, 4))
-        running_balance -= net_pnl  # Subtract net gain/loss to find balance before this trade
+        running_balance -= pnl  # Simply subtract the net PnL
 
-    # Reverse back so historical_balances aligns with chronological order (oldest -> newest)
+    # Reverse back to match chronological order (oldest -> newest)
     historical_balances.reverse()
 
-    # Step 3: Build journal rows
+    # Step 2: Build simple journal rows
     journal_rows = []
-    for index, ((trade, _), trade_balance) in enumerate(zip(trade_data, historical_balances), start=1):
+    for index, (trade, trade_balance) in enumerate(zip(usdt_records, historical_balances), start=1):
         symbol = trade.get("symbol", "")
-        side = trade.get("side", "")
         qty = float(trade.get("qty", 0.0))
         entry_price = float(trade.get("avgEntryPrice", 0.0))
         exit_price = float(trade.get("avgExitPrice", 0.0))
         pnl = float(trade.get("closedPnl", 0.0))
-        open_fee = float(trade.get("openFee", 0.0))
-        close_fee = float(trade.get("closeFee", 0.0))
-
-        filled_value = qty * entry_price
-        exit_order_type = trade.get("orderType", "Market")
-        entry_order_type = "Limit" if trade.get("execType") == "Trade" else "Market"
-
+        
         created_time_ms = int(trade.get("createdTime", 0))
         updated_time_ms = int(trade.get("updatedTime", 0))
 
@@ -140,25 +212,23 @@ def fetch_closed_trades():
             else 0.0
         )
 
-        trade_side = "Long" if side.lower() == "buy" else "Short"
-
         row = {
             "trade number": index,
             "symbol": symbol,
-            "side": trade_side,
+            "side": "Long" if trade.get("side", "").lower() == "buy" else "Short",
             "filled qty": qty,
-            "filled value (usdt)": round(filled_value, 4),
-            "fill fee": round(open_fee, 6),
-            "exit fee": round(close_fee, 6),
+            "filled value (usdt)": round(qty * entry_price, 4),
+            "fill fee": round(float(trade.get("openFee", 0.0)), 6),
+            "exit fee": round(float(trade.get("closeFee", 0.0)), 6),
             "avg fill price": entry_price,
             "exit price": exit_price,
             "PnL": round(pnl, 4),
-            "account balance": trade_balance,  # Accurate reconstructed balance at trade exit!
+            "account balance": trade_balance,
             "entry date": entry_date.strftime("%Y-%m-%d %H:%M:%S") if entry_date else "N/A",
             "exit date": exit_date.strftime("%Y-%m-%d %H:%M:%S") if exit_date else "N/A",
             "days in a trade": days_in_trade,
-            "order type entry": entry_order_type,
-            "order type exit": exit_order_type,
+            "order type entry": "Limit" if trade.get("execType") == "Trade" else "Market",
+            "order type exit": trade.get("orderType", "Market"),
             "instrument": "USDT Perpetuals",
         }
         journal_rows.append(row)
