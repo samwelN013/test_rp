@@ -88,7 +88,7 @@ def get_entry_order_type_from_executions(symbol: str, start_time_ms: int) -> str
     return "Market"
 
 
-def fetch_closed_trades(days_back: int = 550) -> list:
+def fetch_closed_trades(days_back: int = 7) -> list:
     """
     Fetch closed USDT Perpetual trades over a flexible historical window (`days_back`)
     and reconstruct exact row-by-row historical account balances.
