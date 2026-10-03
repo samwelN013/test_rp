@@ -6,13 +6,14 @@ from pathlib import Path
 
 import duckdb
 import requests
+from tqdm import tqdm
 
 # ==========================================
 # CONFIGURATION
 # ==========================================
 SYMBOL = "WLDUSDT"
-START_MONTH = "01/2024"  # Format: MM/YYYY
-END_MONTH = "12/2024"  # Format: MM/YYYY
+START_MONTH = "01/2025"  # Format: MM/YYYY
+END_MONTH = "12/2025"  # Format: MM/YYYY
 
 # Market type: 'um' (USD-M Futures) or 'cm' (COIN-M Futures)
 MARKET_TYPE = "um"
@@ -48,53 +49,67 @@ def download_and_convert():
     print(
         f"Starting download and conversion for {SYMBOL} ({MARKET_TYPE.upper()} Futures)..."
     )
-    print(f"Target Months: {months}\n")
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         tmp_path = Path(tmp_dir)
 
-        for year_month in months:
+        # Main progress bar wrapping month batch
+        month_pbar = tqdm(months, desc="Overall Progress", unit="file")
+
+        for year_month in month_pbar:
             file_name = f"{SYMBOL}-aggTrades-{year_month}"
             zip_filename = f"{file_name}.zip"
 
-            # Binance Data Vision URL structure
+            # Binance Data Vision URL
             url = f"https://data.binance.vision/data/futures/{MARKET_TYPE}/monthly/aggTrades/{SYMBOL}/{zip_filename}"
             output_parquet_path = PQT_FOLDER / f"{file_name}.parquet"
 
-            print(f"Fetching: {zip_filename}...")
+            month_pbar.set_postfix_str(f"Fetching {zip_filename}")
+
             response = requests.get(url, stream=True)
 
             if response.status_code == 404:
-                print(
+                tqdm.write(
                     f"⚠️  File not found on Binance Vision (404): {zip_filename}"
                 )
                 continue
             elif response.status_code != 200:
-                print(
+                tqdm.write(
                     f"❌ Failed to download {zip_filename} (Status: {response.status_code})"
                 )
                 continue
 
-            # Step 1: Save Zip to temporary directory
+            total_size = int(response.headers.get("content-length", 0))
             temp_zip_file = tmp_path / zip_filename
-            with open(temp_zip_file, "wb") as f:
+
+            # Download progress bar for the individual file stream
+            with open(temp_zip_file, "wb") as f, tqdm(
+                desc=f"Downloading {zip_filename}",
+                total=total_size,
+                unit="iB",
+                unit_scale=True,
+                unit_divisor=1024,
+                leave=False,
+            ) as dl_pbar:
                 for chunk in response.iter_content(chunk_size=1024 * 1024):
                     if chunk:
                         f.write(chunk)
+                        dl_pbar.update(len(chunk))
 
-            # Step 2: Extract CSV from Zip
+            # Extract CSV from Zip
             with zipfile.ZipFile(temp_zip_file, "r") as z:
                 csv_members = [
                     name for name in z.namelist() if name.endswith(".csv")
                 ]
                 if not csv_members:
-                    print(f"⚠️  No CSV found in {zip_filename}")
+                    tqdm.write(f"⚠️  No CSV found in {zip_filename}")
                     continue
 
                 extracted_csv_path = Path(z.extract(csv_members[0], tmp_path))
 
-            # Step 3: Stream extracted CSV into Parquet using read_csv_auto
-            # read_csv_auto handles header detection and preserves exact raw Binance column names & types
+            month_pbar.set_postfix_str(f"Converting to Parquet...")
+
+            # Stream extracted CSV into Parquet with DuckDB
             csv_str = extracted_csv_path.as_posix()
             pqt_str = output_parquet_path.as_posix()
 
@@ -105,11 +120,11 @@ def download_and_convert():
             """
             duckdb.sql(query)
 
-            # Cleanup temp files
+            # Clean up temp files
             temp_zip_file.unlink(missing_ok=True)
             extracted_csv_path.unlink(missing_ok=True)
 
-            print(f"✅ Converted and saved: {output_parquet_path.name}")
+            tqdm.write(f"✅ Converted and saved: {output_parquet_path.name}")
 
     total_time = time.time() - total_start_time
     print(
