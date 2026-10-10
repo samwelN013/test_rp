@@ -22,7 +22,7 @@ _5outputs/
 _5backtest_results/
 
 # ------- files to ignore -----------
-*.ipynb
+# *.ipynb
 *.csv
 # *.db
 *.parquet

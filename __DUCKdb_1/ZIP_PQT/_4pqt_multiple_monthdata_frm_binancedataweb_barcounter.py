@@ -11,8 +11,8 @@ from tqdm import tqdm
 # ==========================================
 # CONFIGURATION
 # ==========================================
-SYMBOL = "WLDUSDT"
-START_MONTH = "01/2025"  # Format: MM/YYYY
+SYMBOL = "SOLUSDT"
+START_MONTH = "12/2025"  # Format: MM/YYYY
 END_MONTH = "12/2025"  # Format: MM/YYYY
 
 # Market type: 'um' (USD-M Futures) or 'cm' (COIN-M Futures)
