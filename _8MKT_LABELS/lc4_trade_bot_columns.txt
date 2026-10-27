@@ -1,0 +1,311 @@
+# BEFORE (left side of the pivot point)  --- for  CURRENT MARKET STATE- -- MARKET BEHAVIOR COLUMNS  : A ) PRICE
+bf = df[df['rvol'].notna()].reset_index(drop=True)
+
+bf = bf.sort_values("open_time").reset_index(drop=True)
+
+# Use only bars strictly before the current row
+# Price columns
+close_bh = bf["close"].shift(1)
+# volatility_bh = bf["bar_volatility"].shift(1)
+# atr_bh = bf["ATR"].shift(1)
+# bf["pct_change"] =  bf["prc_change_window"].shift(1)
+
+# ------------ PRICE BEHAVIOR MODELLING
+# A --2) PRICE :  the numeric language interpretation ( 5 suggested columns) $ ( 8 previous columns)
+w_sz = 3  # window size
+
+# P1 — Return : tells  DIRECTION and MAGNITUDE.
+# bf["price_returnZ_3"] = (close_bh / close_bh.shift(w_sz) - 1)* 100
+bf["price_return_3"] = close_bh.pct_change(w_sz) * 100
+# P2 —  velocity - rate of change of price
+bf["price_velocity"] = bf["price_return_3"] / w_sz
+# P3 - relative price change
+bf["rel_price_pct_change"] = bf["rel_prc_change"].shift(
+    1)  # standardizes price changes
+# P4 - bar_volatility_bh
+bf["bar_volatility_bh"] = bf["bar_volatility"].shift(1)
+
+
+# Predictor columns shifted by 1to strictly represent bar data exactly before the current row
+bf["potential_pivot_bh"] = bf["potential_pivot"].shift(1)
+bf["actual_pivot_bh"] = bf["actual_pivot"].shift(1)
+bf["swing_point_wcks_bh"] = bf["swing_point_wcks"].shift(1)
+bf["close_bh"] = bf["close"].shift(1)
+bf["prc_change_window_bh"] = bf["prc_change_window"].shift(1)
+
+# =================================================================
+
+# W = 5
+
+# def add_directional_features(bf, col, prefix, W=5):
+
+
+def add_directional_features(bf=bf, col="prc_change_window_bh", prefix="price", W=3):
+    x = bf[col]
+
+    # Positive and negative magnitudes
+    bull = x.clip(lower=0)
+    bear = (-x).clip(lower=0)
+
+    # Directional persistence: fraction of candles in each direction
+    bull_count = x.gt(0).rolling(W, min_periods=W).sum()
+    bear_count = x.lt(0).rolling(W, min_periods=W).sum()
+
+    bf[f"{prefix}_bull_persistence"] = (bull_count / W)*100
+    bf[f"{prefix}_bear_persistence"] = (bear_count / W)*100
+
+    # Conditional intensity: mean magnitude when that direction occurs
+    bull_sum = bull.rolling(W, min_periods=W).sum()
+    bear_sum = bear.rolling(W, min_periods=W).sum()
+
+    bf[f"{prefix}_bull_intensity"] = (
+        bull_sum / bull_count.replace(0, np.nan)
+    )
+
+    bf[f"{prefix}_bear_intensity"] = (
+        bear_sum / bear_count.replace(0, np.nan)
+    )
+
+    # Directional activity: combines frequency and magnitude
+    bf[f"{prefix}_bull_activity"] = bull.rolling(
+        W, min_periods=W
+    ).mean()
+
+    bf[f"{prefix}_bear_activity"] = bear.rolling(
+        W, min_periods=W
+    ).mean()
+
+
+add_directional_features()
+# ================================================================================
+
+# BULL price activity dominance percentage
+bf["price_bull_dominance"] = (bf["price_bull_activity"] /
+                              (bf["price_bear_activity"] + bf["price_bull_activity"])) * 100
+bf["price_bear_dominance"] = (bf["price_bear_activity"] /
+                              (bf["price_bear_activity"] + bf["price_bull_activity"])) * 100
+
+# ===================================================================
+
+# B ) VOLUME BEHAVIOUR ANALYSIS : the numeric language interpretation ( 3 suggested columns) $ ( 7 previous columns)
+
+# Use only bars strictly before the current row
+bf["delta_bh"] = bf["delta"].shift(1)
+bf["totalVol_bh"] = bf["totalVol_usdt"].shift(1)
+
+
+# v1 — relative volume
+bf["rvol_bh"] = bf["rvol"].shift(1)
+
+# V2 — Volume / liquidity / rvol persistence
+win = 3
+bf["rvol_persistence"] = (
+    bf["rvol_bh"]
+    .ge(1.0)
+    .rolling(win, min_periods=win)
+    .mean()
+)*100
+
+bf["rvol_intensity"] = (
+    bf["rvol_bh"]
+    .rolling(win, min_periods=win)
+    .mean()
+)
+
+# ===================================================================
+
+# C ) DELTA BEHAVIOUR ANALYSIS : the numeric language interpretation ( 5 suggested columns) $ ( 18 previous columns)
+
+delta_bh = bf["delta"].shift(1)
+
+# Use only bars strictly before the current row
+bf["delta_bh"] = bf["delta"].shift(1)
+bf["totalVol_bh"] = bf["totalVol_usdt"].shift(1)
+
+bf["rvol_bh"] = bf["rvol"].shift(1)
+bf["s_delta_pct_bh"] = bf["s_delta_pct"].shift(1)
+
+
+# D1 — Delta imbalance
+bf["delta_imbalance_pct_bh"] = (bf["delta_bh"] / bf["totalVol_bh"])*100
+
+# D2 Standardized delta
+# option 1
+bf["standzd_delta_bh"] = bf["standzd_delta"].shift(1)
+# option 2
+bf["standzd_delta_dev_bh"] = bf["standzd_delta_dev_zscore"].shift(1)
+
+# =================================================================
+
+# W = 5
+
+# def add_directional_features(bf, col, prefix, W=5):
+
+
+def add_directional_features_delta(bf=bf, col="standzd_delta_bh", prefix="std_delta", W=3):
+    x = bf[col]
+
+    # Positive and negative magnitudes
+    bull = x.clip(lower=0)
+    bear = (-x).clip(lower=0)
+
+    # Directional activity: combines frequency and magnitude
+    bf[f"{prefix}_bull_activity"] = bull.rolling(
+        W, min_periods=W
+    ).mean()
+
+    bf[f"{prefix}_bear_activity"] = bear.rolling(
+        W, min_periods=W
+    ).mean()
+
+
+add_directional_features_delta()
+# ================================================================================
+
+# D5
+# BULL standrd delta activity dominance percentage
+bf["std_delta_bull_dominance"] = (bf["std_delta_bull_activity"] / (
+    bf["std_delta_bear_activity"] + bf["std_delta_bull_activity"])) * 100
+bf["std_delta_bear_dominance"] = (bf["std_delta_bear_activity"] / (
+    bf["std_delta_bear_activity"] + bf["std_delta_bull_activity"])) * 100
+
+# ===================================================================
+
+# D ) BUY_RATIO BEHAVIOUR ANALYSIS : the numeric language interpretation ( 3 suggested columns) $ ( 11 previous columns)
+
+# Use only bars strictly before the current row
+buyVol_bh = bf["buyVol_usdt"].shift(1)
+sellVol_bh = bf["sellVol_usdt"].shift(1)
+
+bf["totalVol_bh"] = bf["totalVol_usdt"].shift(1)
+
+# bf["rvol_bh"]   = bf["rvol"].shift(1)
+# bf["s_delta_pct_bh"] =bf["s_delta_pct"].shift(1)
+
+
+# B1  : BR - buyratio
+bf["buy_ratio_bh"] = (buyVol_bh / bf["totalVol_bh"])*100
+
+# Rolling average aggressive-buy share
+W = 3
+bf["buy_pressure_persistence"] = (
+    bf["buy_ratio_bh"]
+    .rolling(W, min_periods=W)
+    .mean()
+)
+
+# B2  : SR - sellratio
+bf["sell_ratio_bh"] = (sellVol_bh / bf["totalVol_bh"])*100
+# B4
+bf["sell_pressure_persistence"] = (
+    bf["sell_ratio_bh"]
+    .rolling(W, min_periods=W)
+    .mean()
+)
+
+# RIGHT CANDLES RETURNS === OUTCOME ANALYSIS : To the pivot
+
+# 1. FUTURE PRICE CHANGE to confirmed pivot
+# 2. FUTURE HIGH / LOW EXCURSION
+
+# Identify confirmed pivot candles
+pivot_mask = bf["swing_point_wcks"].notna()
+pivot_positions = np.flatnonzero(pivot_mask.to_numpy())
+
+# Initialize outcome columns
+bf["return_to_pivot_pct"] = np.nan
+bf["return_price_velocity"] = np.nan
+bf["bars_to_pivot"] = np.nan
+
+opens = bf["open"].to_numpy(dtype=float)
+closes = bf["close"].to_numpy(dtype=float)
+
+# Use the CLOSE of each confirmed pivot candle
+pivot_close_prices = closes[pivot_positions]
+
+for i in range(len(bf)):
+
+    # Find the nearest confirmed pivot strictly after candle i
+    next_idx = np.searchsorted(pivot_positions, i, side="right")
+
+    if next_idx >= len(pivot_positions):
+        continue
+
+    pivot_pos = pivot_positions[next_idx]
+
+    start_price = opens[i]
+    end_price = pivot_close_prices[next_idx]
+    bars = pivot_pos - i
+
+    if not np.isfinite(start_price) or start_price <= 0:
+        continue
+
+    # 1. Percentage return from current candle OPEN to pivot candle CLOSE
+    return_pct = ((end_price - start_price) / start_price) * 100
+
+    # 2. Average percentage return per bar
+    velocity = return_pct / bars if bars > 0 else np.nan
+
+    # 3. Number of bars until the next confirmed pivot
+    bf.iloc[i, bf.columns.get_loc("return_to_pivot_pct")] = return_pct
+    bf.iloc[i, bf.columns.get_loc("return_price_velocity")] = velocity
+    bf.iloc[i, bf.columns.get_loc("bars_to_pivot")] = bars
+
+
+fwd_cols = [
+    # ORIGINAL COLUMNS
+    "open_time",
+
+    # SHIFTED COLUMNS
+    "potential_pivot_bh",
+    "actual_pivot_bh",
+    "swing_point_wcks_bh",
+    # "close_bh",
+
+    # CANDLE
+    # "upper_wick_pct",
+    # "body_pct",
+    # "lower_wick_pct",
+
+    "bar_volatility_bh",
+    "prc_change_window_bh",
+    "rel_price_pct_change",
+
+    # "price_bull_activity",
+    # "price_bear_activity",
+    "price_bull_dominance",
+    "price_bear_dominance",
+
+    "price_bull_persistence",
+    # "price_bull_intensity",
+    "price_bear_persistence",
+    # "price_bear_intensity",
+
+    # PRICE COLUMNS
+
+    # "price_return_3",
+    # "price_velocity",
+    # VOLUME COLUMNS
+    "rvol_bh",
+    "rvol_persistence",
+    "rvol_intensity",
+    # DELTA COLUMNS
+    # "delta_imbalance_pct_bh",
+    "standzd_delta_bh",
+    # "std_delta_bull_activity",
+    # "std_delta_bear_activity",
+    "std_delta_bull_dominance",
+    "std_delta_bear_dominance",
+
+    # "standzd_delta_dev_bh",
+
+    # BUY-RATIO COLUMNS
+    "buy_ratio_bh",
+    "buy_pressure_persistence",
+    "sell_ratio_bh",
+    "sell_pressure_persistence",
+    # FORWARD RETURN COLUMNS
+    "bars_to_pivot",
+    "return_to_pivot_pct",
+    # "return_price_velocity",
+]
