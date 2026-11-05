@@ -11,9 +11,9 @@ from tqdm import tqdm
 # ==========================================
 # CONFIGURATION
 # ==========================================
-SYMBOL = "ETHUSDT"
-START_MONTH = "01/2025"  # Format: MM/YYYY
-END_MONTH = "12/2025"  # Format: MM/YYYY
+SYMBOL = "SOLUSDT"
+START_MONTH = "06/2026"  # Format: MM/YYYY
+END_MONTH = "09/2026"  # Format: MM/YYYY
 
 # Market type: 'um' (USD-M Futures) or 'cm' (COIN-M Futures)
 MARKET_TYPE = "um"
