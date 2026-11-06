@@ -10,7 +10,7 @@ from tqdm import tqdm
 # ==========================================
 # CONFIGURATION
 # ==========================================
-SYMBOL = "SOLUSDT"
+SYMBOL = "WLDUSDT"
 START_MONTH = "10/2026"  # Format: MM/YYYY
 END_MONTH = "11/2026"    # Format: MM/YYYY
 
