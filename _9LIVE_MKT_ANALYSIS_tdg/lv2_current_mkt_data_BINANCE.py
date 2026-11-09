@@ -10,8 +10,9 @@ import requests
 from tqdm import tqdm
 
 # Folder setup
+symbol = 'WLDUSDT'
 
-PQT_FOLDER = Path(__file__).resolve().parent.parent /"_9LIVE_MKT_ANALYSIS_tdg"/"_inputs"/"binance_aggts"/ "BTCUSDT_current_data"
+PQT_FOLDER = Path(__file__).resolve().parent.parent /"_9LIVE_MKT_ANALYSIS_tdg"/"_inputs"/"binance_aggts"/ f"{symbol}_current_data"
 # PQT_FOLDER = Path(__file__).resolve().parent.parent /"_9LIVE_MKT_ANALYSIS_tdg"/"_inputs"/"binance_aggts"/ f"{symbol}_current_data"
 PQT_FOLDER.mkdir(parents=True, exist_ok=True)
 
@@ -237,5 +238,5 @@ def download_and_convert(symbol: str = "SOLUSDT", days: int = 30):
 
 if __name__ == "__main__":
     # Call with parameters
-    download_and_convert(symbol="BTCUSDT", days=30)
+    download_and_convert(symbol="WLDUSDT", days=30)
     # print(PQT_FOLDER, "\n", PQT_FOLDER.exists())
