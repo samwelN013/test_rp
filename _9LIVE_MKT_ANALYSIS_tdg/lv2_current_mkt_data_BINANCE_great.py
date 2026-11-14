@@ -269,4 +269,4 @@ def download_and_convert(symbol: str = "SOLUSDT", days: int = 30):
 
 
 if __name__ == "__main__":
-    download_and_convert(symbol="TAOUSDT", days=30)
+    download_and_convert(symbol="TIAUSDT", days=30)

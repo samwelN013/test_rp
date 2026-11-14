@@ -88,7 +88,8 @@ def fetch_day_via_rest_api(symbol: str, target_date: str) -> pd.DataFrame:
             else:
                 current_start = last_time + 1
         except Exception as e:
-            print(f"⚠️ Network glitch during REST API fetch: {e}. Retrying chunk...")
+            print(
+                f"⚠️ Network glitch during REST API fetch: {e}. Retrying chunk...")
             time.sleep(3)
             continue
 
@@ -239,12 +240,14 @@ def download_and_convert(symbol: str = "SOLUSDT", days: int = 30):
                         f"✅ Downloaded & Converted: {output_parquet_path.name}"
                     )
                 except Exception as e:
-                    tqdm.write(f"⚠️ Error processing zip file ({e}). Trying REST API fallback...")
+                    tqdm.write(
+                        f"⚠️ Error processing zip file ({e}). Trying REST API fallback...")
                     df = fetch_day_via_rest_api(symbol, date_str)
                     if not df.empty:
                         query = f"COPY df TO '{pqt_str}' (FORMAT 'parquet', COMPRESSION 'zstd');"
                         duckdb.sql(query)
-                        tqdm.write(f"✅ Generated via API & Saved: {output_parquet_path.name}")
+                        tqdm.write(
+                            f"✅ Generated via API & Saved: {output_parquet_path.name}")
 
             else:
                 tqdm.write(
@@ -268,17 +271,19 @@ def download_and_convert(symbol: str = "SOLUSDT", days: int = 30):
     )
 
 
-if __name__ == "__main__":   
-    download_and_convert(symbol="ADAUSDT", days=30) #1
-    download_and_convert(symbol="ARBUSDT", days=30) #2
-    download_and_convert(symbol="BNBUSDT", days=30) #3
-    download_and_convert(symbol="BTCUSDT", days=30) #4
-    download_and_convert(symbol="DOGEUSDT", days=30) #5
-    download_and_convert(symbol="ETHUSDT", days=30) #6
-    download_and_convert(symbol="HYPEUSDT", days=30) #7
-    download_and_convert(symbol="SOLUSDT", days=30) #8
-    download_and_convert(symbol="SUIUSDT", days=30) #9
-    download_and_convert(symbol="TAOUSDT", days=30) #10
-    download_and_convert(symbol="UNIUSDT", days=30) #11
-    download_and_convert(symbol="WLDUSDT", days=30) #12
-    download_and_convert(symbol="XRPUSDT", days=30) #13
+if __name__ == "__main__":
+    # -------------------------------------
+    # download_and_convert(symbol="ADAUSDT", days=30) #1
+    # download_and_convert(symbol="WLDUSDT", days=30) #2
+    # -------------------------------------
+    rolling_days = 33
+    # symbols = ["ADAUSDT", "WLDUSDT", "TAOUSDT", "HYPEUSDT"] # MAIN COINS
+
+    symbols = ["INJUSDT", "ARBUSDT", "UNIUSDT", "NEARUSDT",
+               "ICPUSDT", "TIAUSDT"]  # VOLATILITY COINS
+    
+    # symbols = ["SOLUSDT", "XRPUSDT", "DOGEUSDT", "BNBUSDT", "ETHUSDT", "BTCUSDT"] # CONTROL COINS
+
+    for coinpair in symbols:
+        download_and_convert(symbol=coinpair, days=rolling_days)
+# --------------------------------------
