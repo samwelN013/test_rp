@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WYNAN Technologies — Live Microstructure Terminal</title>
+  <style>
+    :root {
+      --bg-main: #121212;
+      --bg-panel: #1a1a1a;
+      --bg-bar: #1f1c24;
+      --border: #2e2e2e;
+      --text-primary: #eaeaea;
+      --text-muted: #9aa0a6;
+      --accent: #d6df58;
+      --accent-bg: #2f3314;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+      padding: 16px 20px;
+    }
+
+    /* Top Navigation & Coin Selector Bar */
+    .top-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      background: var(--bg-bar);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 18px;
+      margin-bottom: 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-title {
+      font-weight: 700;
+      font-size: 16px;
+      letter-spacing: 0.6px;
+      color: var(--accent);
+    }
+
+    .brand-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .coin-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .coin-btn {
+      background: #252529;
+      color: #d4d4d8;
+      border: 1px solid #3c3c42;
+      border-radius: 6px;
+      padding: 7px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .coin-btn:hover {
+      background: #323238;
+      border-color: #666;
+    }
+
+    .coin-btn.active {
+      background: var(--accent-bg);
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .status-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .refresh-btn {
+      background: #28282e;
+      color: #eaeaea;
+      border: 1px solid #444;
+      border-radius: 5px;
+      padding: 6px 11px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .refresh-btn:hover {
+      background: #36363f;
+    }
+
+    .refresh-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    /* Empty Landing State */
+    .landing-prompt {
+      background: var(--bg-panel);
+      border: 1px dashed #3a3a3a;
+      border-radius: 8px;
+      padding: 60px 20px;
+      text-align: center;
+      color: var(--text-muted);
+    }
+
+    .landing-prompt h2 {
+      color: var(--text-primary);
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+
+    /* Dashboard Sections */
+    .dashboard-container {
+      display: none;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    /* .table-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      width: 100%;
+    } */
+
+    .table-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      width: 100%;
+      min-width: 0;
+      /* Allows flex card to fit screen width instead of expanding past it */
+    }
+
+    .table-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #292929;
+    }
+
+    .table-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #f0f0f0;
+    }
+
+    .table-title span {
+      color: var(--accent);
+      margin-right: 6px;
+    }
+
+    .table-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* .table-wrapper {
+      width: 100%;
+      overflow: hidden;
+      background: #161616;
+      border-radius: 4px;
+    } */
+
+    /* Ensure Pandas Styler table fits cleanly inside container */
+    /* .table-wrapper table {
+      width: max-content;
+      min-width: 100%;
+      background-color: #161616;
+      color: #e0e0e0;
+    } */
+
+    .table-wrapper {
+      width: 100%;
+      max-width: 100%;
+      background: #161616;
+      border-radius: 4px;
+    }
+
+    /* Constrain table box to viewport width so horizontal & vertical scrollbars work with sticky headers */
+    .table-wrapper table {
+      width: 100%;
+      max-width: 100%;
+      background-color: #161616;
+      color: #e0e0e0;
+    }
+
+    .loader {
+      display: inline-block;
+      color: var(--accent);
+      font-weight: 600;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="top-bar">
+    <div class="brand">
+      <div class="brand-title"> WYNAN Trading systems</div>
+      <div class="brand-sub">Microstructure &amp; Pivot Terminal</div>
+    </div>
+
+    <div class="coin-buttons" id="coinButtons">
+      <span class="brand-sub">Loading symbols...</span>
+    </div>
+
+    <div class="status-controls">
+      <span id="lastUpdated">Idle</span>
+      <span id="countdownTimer"></span>
+      <button class="refresh-btn" id="manualRefreshBtn" disabled>Refresh Now</button>
+    </div>
+  </div>
+
+  <!-- Initial Prompt Before Selecting a Coin -->
+  <div class="landing-prompt" id="landingPrompt">
+    <h2>Select a Symbol Above to Load Live Tables</h2>
+    <p>Click any coin symbol from <code> above list </code> to load analysis tables.</p>
+  </div>
+
+  <!-- Active Symbol Tables -->
+  <div class="dashboard-container" id="dashboardContainer">
+    <!-- 1 Day Timeframe Table (Top) -->
+    <div class="table-card">
+      <div class="table-header">
+        <div class="table-title"><span id="symLabel1D"></span> 1 DAY TIMEFRAME (Completed Days)</div>
+        <div class="table-meta" id="meta1D"></div>
+      </div>
+      <div class="table-wrapper" id="table1D"></div>
+    </div>
+
+    <!-- 1 Hour Timeframe Table (Bottom) -->
+    <div class="table-card">
+      <div class="table-header">
+        <div class="table-title"><span id="symLabel1H"></span> 1 HOUR TIMEFRAME (Last 2 Days + Live Hourly mkt data)
+        </div>
+        <div class="table-meta" id="meta1H"></div>
+      </div>
+      <div class="table-wrapper" id="table1H"></div>
+    </div>
+  </div>
+
+  <script>
+    const REFRESH_INTERVAL_SEC = 180; // 3 minutes
+    let activeSymbol = null;
+    let secondsRemaining = REFRESH_INTERVAL_SEC;
+    let timerId = null;
+
+    const coinButtonsEl = document.getElementById("coinButtons");
+    const landingPromptEl = document.getElementById("landingPrompt");
+    const dashboardContainerEl = document.getElementById("dashboardContainer");
+    const table1DEl = document.getElementById("table1D");
+    const table1HEl = document.getElementById("table1H");
+    const symLabel1DEl = document.getElementById("symLabel1D");
+    const symLabel1HEl = document.getElementById("symLabel1H");
+    const meta1DEl = document.getElementById("meta1D");
+    const meta1HEl = document.getElementById("meta1H");
+    const lastUpdatedEl = document.getElementById("lastUpdated");
+    const countdownTimerEl = document.getElementById("countdownTimer");
+    const manualRefreshBtn = document.getElementById("manualRefreshBtn");
+
+    async function loadSymbols() {
+      try {
+        const res = await fetch("/api/symbols");
+        const data = await res.json();
+        coinButtonsEl.innerHTML = "";
+
+        if (!data.symbols || data.symbols.length === 0) {
+          coinButtonsEl.innerHTML = `<span class="brand-sub">No *_current_data folders found</span>`;
+          return;
+        }
+
+        data.symbols.forEach((symbol) => {
+          const btn = document.createElement("button");
+          btn.className = "coin-btn";
+          btn.textContent = symbol;
+          btn.dataset.symbol = symbol;
+          btn.addEventListener("click", () => selectSymbol(symbol));
+          coinButtonsEl.appendChild(btn);
+        });
+      } catch (err) {
+        coinButtonsEl.innerHTML = `<span style="color:#e74c3c;">Error loading symbols</span>`;
+      }
+    }
+
+    function updateActiveButton(symbol) {
+      document.querySelectorAll(".coin-btn").forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.symbol === symbol);
+      });
+    }
+
+    function scrollTablesToLatest(wrapperEl) {
+      // Pandas Styler creates a scrollable <table> element with display:block and max-height
+      const tbl = wrapperEl.querySelector("table");
+      if (tbl) {
+        tbl.scrollTop = tbl.scrollHeight;
+      }
+    }
+
+    async function fetchDashboardData(symbol, isAuto = false) {
+      if (!symbol) return;
+
+      manualRefreshBtn.disabled = true;
+      lastUpdatedEl.innerHTML = `<span class="loader">Updating ${symbol}...</span>`;
+
+      try {
+        const res = await fetch(`/api/dashboard/${encodeURIComponent(symbol)}`);
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+        const data = await res.json();
+
+        landingPromptEl.style.display = "none";
+        dashboardContainerEl.style.display = "flex";
+
+        symLabel1DEl.textContent = data.symbol;
+        symLabel1HEl.textContent = data.symbol;
+        meta1DEl.textContent = `Total computed bars: ${data.rows_1d} (showing 21-row window)`;
+        meta1HEl.textContent = `Total computed bars: ${data.rows_1h} (showing 21-row window)`;
+
+        table1DEl.innerHTML = data.html_1d;
+        table1HEl.innerHTML = data.html_1h;
+
+        // Scroll vertically to the most recent rows while keeping header & open_time frozen
+        scrollTablesToLatest(table1DEl);
+        scrollTablesToLatest(table1HEl);
+
+        lastUpdatedEl.textContent = `Last updated: ${data.updated_utc}`;
+        resetCountdown();
+      } catch (err) {
+        lastUpdatedEl.innerHTML = `<span style="color:#e74c3c;">Failed to load ${symbol}</span>`;
+      } finally {
+        manualRefreshBtn.disabled = false;
+      }
+    }
+
+    function selectSymbol(symbol) {
+      activeSymbol = symbol;
+      updateActiveButton(symbol);
+      fetchDashboardData(symbol, false);
+    }
+
+    function resetCountdown() {
+      secondsRemaining = REFRESH_INTERVAL_SEC;
+      updateCountdownDisplay();
+
+      if (timerId) clearInterval(timerId);
+      timerId = setInterval(() => {
+        secondsRemaining -= 1;
+        if (secondsRemaining <= 0) {
+          fetchDashboardData(activeSymbol, true);
+        } else {
+          updateCountdownDisplay();
+        }
+      }, 1000);
+    }
+
+    function updateCountdownDisplay() {
+      if (!activeSymbol) {
+        countdownTimerEl.textContent = "";
+        return;
+      }
+      const mins = Math.floor(secondsRemaining / 60);
+      const secs = String(secondsRemaining % 60).padStart(2, "0");
+      countdownTimerEl.textContent = `| Next refresh in ${mins}:${secs}`;
+    }
+
+    manualRefreshBtn.addEventListener("click", () => {
+      if (activeSymbol) {
+        fetchDashboardData(activeSymbol, false);
+      }
+    });
+
+    // Initialize coin bar on load
+    loadSymbols();
+  </script>
+</body>
+
+</html>

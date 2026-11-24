@@ -25,8 +25,7 @@ today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 # file path
 SYMBOL = "ADAUSDT"
 
-# folder = Path.cwd() /"_inputs"/"binance_aggts"/f"{SYMBOL}_current_data"
-folder = Path(__file__).resolve().parent/"_inputs"/"binance_aggts"/f"{SYMBOL}_current_data"
+folder = Path(__file__).resolve().parent.parent/ "WYNAN"/ "binance_aggts_hist"/f"{SYMBOL}_current_data"
 print(folder.exists())
 
 # access the files

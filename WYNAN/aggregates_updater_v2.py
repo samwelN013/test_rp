@@ -514,9 +514,7 @@ def download_and_convert(symbol: str = "SOLUSDT", prev_days: int = 30):
     symbol = symbol.upper()
 
     base_dir = (
-        Path(__file__).resolve().parent.parent
-        / "WYNAN"
-        / "binance_aggts_hist"
+        Path(__file__).resolve().parent.parent/ "WYNAN"/ "binance_aggts_hist"
     )
     pqt_folder = base_dir / f"{symbol}_current_data"
     pqt_folder.mkdir(parents=True, exist_ok=True)
@@ -614,3 +612,14 @@ if __name__ == "__main__":
     # download_and_convert(symbol="SOLUSDT", prev_days=2)
     # download_and_convert(symbol="ADAUSDT", prev_days=2)
     download_and_convert(symbol="XAUUSDT", prev_days=30)
+
+    # rolling_days = 33
+    # symbols = [
+    # "ADAUSDT", "WLDUSDT", "TAOUSDT", "HYPEUSDT",
+    # "INJUSDT", "ARBUSDT", "UNIUSDT", "NEARUSDT","ICPUSDT", "TIAUSDT",
+    # "SOLUSDT", "XRPUSDT", "DOGEUSDT", "BNBUSDT", "ETHUSDT", "BTCUSDT",
+    # "XAUUSDT"
+    # ] 
+
+    # for coinpair in symbols:
+    #     download_and_convert(symbol=coinpair, prev_days=rolling_days)
