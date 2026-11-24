@@ -415,14 +415,18 @@ if __name__ == "__main__":
     download_and_convert(symbol="ADAUSDT", prev_days=33)
 
     # -------------------------------------
-    # rolling_days = 33
-    # # symbols = ["ADAUSDT", "WLDUSDT", "TAOUSDT", "HYPEUSDT"] # MAIN COINS
-
+    rolling_days = 33
+    # symbols = ["ADAUSDT", "WLDUSDT", "TAOUSDT", "HYPEUSDT"] # MAIN COINS
     # symbols = ["INJUSDT", "ARBUSDT", "UNIUSDT", "NEARUSDT",
-    #            "ICPUSDT", "TIAUSDT"]  # VOLATILITY COINS
-    
-    # # symbols = ["SOLUSDT", "XRPUSDT", "DOGEUSDT", "BNBUSDT", "ETHUSDT", "BTCUSDT"] # CONTROL COINS
+    #            "ICPUSDT", "TIAUSDT"]  # VOLATILITY COINS 
+    symbols = ["SOLUSDT", "XRPUSDT", "DOGEUSDT", "BNBUSDT", "ETHUSDT", "BTCUSDT"] # CONTROL COINS
+    #********************
+    # symbols = [
+    #"ADAUSDT", "WLDUSDT", "TAOUSDT", "HYPEUSDT",
+    #"INJUSDT", "ARBUSDT", "UNIUSDT", "NEARUSDT","ICPUSDT", "TIAUSDT",
+    #"SOLUSDT", "XRPUSDT", "DOGEUSDT", "BNBUSDT", "ETHUSDT", "BTCUSDT"
+    #] # Hourly Update For All Symbols
 
-    # for coinpair in symbols:
-    #     download_and_convert(symbol=coinpair, prev_days=rolling_days)
+    for coinpair in symbols:
+        download_and_convert(symbol=coinpair, prev_days=rolling_days)
 # --------------------------------------
