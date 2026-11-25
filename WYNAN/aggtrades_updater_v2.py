@@ -607,10 +607,10 @@ def download_and_convert(symbol: str = "SOLUSDT", prev_days: int = 30):
 
 
 if __name__ == "__main__":
-    # download_and_convert(symbol="TAOUSDT", prev_days=30)
-    # download_and_convert(symbol="BTCUSDT", prev_days=30)
-    # download_and_convert(symbol="SOLUSDT", prev_days=2)
-    # download_and_convert(symbol="ADAUSDT", prev_days=2)
+    download_and_convert(symbol="TAOUSDT", prev_days=33)
+    download_and_convert(symbol="BTCUSDT", prev_days=33)
+    download_and_convert(symbol="SOLUSDT", prev_days=33)
+    download_and_convert(symbol="ADAUSDT", prev_days=30)
     download_and_convert(symbol="XAUUSDT", prev_days=30)
 
     # rolling_days = 33
