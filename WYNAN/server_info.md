@@ -104,3 +104,14 @@ Install cloudflared on your `Windows PC` (run in PowerShell):
 PowerShell
 `winget install Cloudflare.cloudflared`
 (Close and reopen PowerShell after installing so the cloudflared command is recognized.)
+
+Keep Uvicorn running in your first terminal (`uvicorn app:app --host 127.0.0.1 --port 8000`).
+
+Open a second terminal and start the tunnel:
+
+PowerShell
+`cloudflared tunnel --url http://127.0.0.1:8000`
+
+(Optional: If you want to lock the link so only your email can open it via a one-time PIN, run cloudflared tunnel --url [http://127.0.0.1:8000](http://127.0.0.1:8000) --allowed-mail your_email@gmail.com.)
+
+Open the generated link (e.g., [https://random-words.trycloudflare.com](https://random-words.trycloudflare.com)) on your phone over mobile data. It stays live as long as your PC and that terminal window stay running.
